@@ -1,4 +1,4 @@
-Roblox Trend Radar
+##Roblox Trend Radar
 
 Discover emerging trends across Roblox games.
 
@@ -16,7 +16,7 @@ Instead of focusing only on the most popular games, the project aims to track pl
 
 📊 Analyze historical data — Compare game performance across different time periods.
 
-🛠️ Tech Stack
+#🛠️ Tech Stack
 
 Python — Core application and data processing.
 
@@ -24,7 +24,7 @@ HTTPX — HTTP requests to Roblox endpoints.
 
 PostgreSQL — Planned storage for historical observations.
 
-⚙️ Getting Started
+#⚙️ Getting Started
 
 Requirements
 

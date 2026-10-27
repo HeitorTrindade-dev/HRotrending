@@ -1,0 +1,35 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Dumps de respostas da API e dados coletados
+sorts_raw.json
+sort_*_raw.json
+games_enriched.json
+data/
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# Editores e sistema
+.vscode/
+.idea/
+.DS_Store

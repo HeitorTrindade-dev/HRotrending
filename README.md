@@ -1,5 +1,4 @@
-# Roblox Trend Radar
-
+# HROtrnding
 Discover emerging trends across Roblox games.
 
 Roblox Trend Radar is a data collection and trend analysis project designed to identify Roblox games that are rapidly gaining players.

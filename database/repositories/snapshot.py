@@ -7,7 +7,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from models import GameSnapshot
+from ..models import GameSnapshot
 
 from ._base import Row, check_same_keys, chunks
 

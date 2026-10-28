@@ -5,7 +5,7 @@ from typing import Sequence
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from models import GamePass
+from ..models import GamePass
 
 from ._base import Row, upsert
 

@@ -5,7 +5,7 @@ from typing import Iterable, Sequence
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from models import Game
+from ..models import Game
 
 from ._base import Row, upsert
 

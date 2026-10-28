@@ -63,7 +63,7 @@ def get_session() -> Iterator[Session]:
 
 def init_db() -> None:
     """Cria as tabelas. Útil em desenvolvimento; em produção use Alembic."""
-    from models import Base
+    from .models import Base
 
     Base.metadata.create_all(engine)
 

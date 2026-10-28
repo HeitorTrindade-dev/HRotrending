@@ -1,66 +1,3 @@
-# HROtrnding
-Discover emerging trends across Roblox games.
-
-Roblox Trend Radar is a data collection and trend analysis project designed to identify Roblox games that are rapidly gaining players.
-
-Instead of focusing only on the most popular games, the project aims to track player growth over time, detect emerging games, and identify patterns among games with similar gameplay mechanics.
-
-🎯 Project Goals
-
-📈 Track player growth — Monitor changes in concurrent player counts over time.
-
-🔎 Discover emerging games — Identify games that are gaining traction.
-
-🧩 Detect emerging trends — Find patterns among games with similar gameplay mechanics.
-
-📊 Analyze historical data — Compare game performance across different time periods.
-
-## 🛠️ Tech Stack
-
-Python — Core application and data processing.
-
-HTTPX — HTTP requests to Roblox endpoints.
-
-PostgreSQL — Planned storage for historical observations.
-
-## ⚙️ Getting Started
-
-Requirements
-
-Python 3.10 or newer.
-
-Git.
-
-1. Clone the repository
-```
-git clone <repository-url>
-cd roblox-trend-radar
-```
-
-2. Create a virtual environment
-
-```
-python -m venv .venv
-
-```
-Activate it on Linux or macOS:
-
-```
-source .venv/bin/activate
-```
-On Windows:
-
-```
-.venv\Scripts\Activate.ps1
-```
-3. Install dependencies
-```
-python -m pip install -r requirements.txt
-```
-4. Run the application
-```
-python main.py
-```
 # Roblox Trend Radar
 
 Descubra tendências emergentes entre os jogos do Roblox.
@@ -80,51 +17,218 @@ O Roblox Trend Radar é um projeto de coleta de dados e análise de tendências 
 |---|---|
 | Descoberta de jogos (`buscas/collector.py`) | ✅ Implementada |
 | Consulta em lote por universe ID (`buscas/lookup.py`) | ✅ Implementada |
-| Armazenamento em PostgreSQL | ⏳ Planejado |
-| Análise de crescimento | ⏳ Planejado |
+| Banco PostgreSQL: models, conexão e repositories (`database/`) | ✅ Implementado |
+| Ligação coletor → banco (gravar o que é coletado) | ⏳ Planejado |
+| Migrations (Alembic) | ⏳ Planejado |
+| Cálculo das features (`ml_game_features`) | ⏳ Planejado |
 | Detecção de tendências / agrupamento de jogos | ⏳ Planejado |
 
 ## 🛠️ Stack
 
 - **Python 3.10+** — aplicação e processamento de dados.
 - **curl_cffi** — requisições HTTP aos endpoints da Roblox (veja [Por que curl_cffi e não httpx](#por-que-curl_cffi-e-não-httpx)).
-- **PostgreSQL** — armazenamento planejado para o histórico de observações.
+- **PostgreSQL** — armazenamento do histórico de observações.
+- **SQLAlchemy 2** + **psycopg 3** — acesso ao banco.
+- **python-dotenv** — configuração por variáveis de ambiente.
 
 ## 🗂️ Estrutura do projeto
 
 ```
 .
 ├── buscas/
-│   ├── collector.py     # Descobre jogos nas listas de descoberta da Roblox
-│   ├── lookup.py        # Consulta detalhes de jogos em lote, por universe ID
-│   └── roblox_http.py   # Camada HTTP compartilhada (sessão, retry, backoff)
+│   ├── collector.py         # Descobre jogos nas listas de descoberta da Roblox
+│   ├── lookup.py            # Consulta detalhes de jogos em lote, por universe ID
+│   └── roblox_http.py       # Camada HTTP compartilhada (sessão, retry, backoff)
+├── database/
+│   ├── models.py            # Tabelas (SQLAlchemy)
+│   ├── database.py          # Engine, sessão e criação das tabelas (lê o .env)
+│   └── repositories/
+│       ├── _base.py         # Helpers compartilhados (upsert em lote)
+│       ├── game.py          # games
+│       ├── snapshot.py      # game_snapshots
+│       ├── game_pass.py     # game_passes
+│       └── ml_features.py   # ml_game_features
+├── .env.example             # Modelo das variáveis de ambiente
+├── Dockerfile               # Imagem do programa
+├── docker-compose.yml       # PostgreSQL + programa
+├── .dockerignore
 ├── requirements.txt
 └── README.md
 ```
 
-Cada módulo tem uma única responsabilidade. `collector.py` e `lookup.py` não dependem um do outro: os dois dependem só de `roblox_http.py`.
+Cada módulo tem uma única responsabilidade. `buscas/` fala com a Roblox; `database/` fala com o PostgreSQL. Um não depende do outro.
 
-## ⚙️ Como funciona
+## 🚀 Como começar
 
+### Requisitos
+
+- Python 3.10 ou superior
+- PostgreSQL
+- Git
+
+### 1. Clone o repositório
+
+```bash
+git clone <url-do-repositorio>
+cd HRotrending
 ```
- Listas de descoberta da Roblox       universe IDs          Detalhes dos jogos
-      (sorts da Explore API)   ───►  (do collector, de  ───►    (API de games)
-          collector.py               um banco, etc.)              lookup.py
+
+### 2. Crie um ambiente virtual
+
+```bash
+python -m venv .venv
 ```
 
-1. **Descoberta** — o `collector.py` pergunta à Explore API quais jogos estão nas listas que a Roblox mostra na página inicial e devolve esses jogos sem repetição.
-2. **Consulta** — o `lookup.py` recebe uma lista de universe IDs e devolve os detalhes atualizados de cada jogo, em lotes.
+Ative no Linux ou macOS:
 
-As duas etapas são independentes: o `lookup.py` pode ser chamado com IDs que vieram do coletor, de um banco ou de um arquivo.
+```bash
+source .venv/bin/activate
+```
 
-## 📦 Módulos
+No Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Instale as dependências
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Configure o banco
+
+Crie o banco no PostgreSQL:
+
+```bash
+createdb roblox
+```
+
+Copie o modelo de variáveis e preencha com os seus dados:
+
+```bash
+cp .env.example .env
+```
+
+| Variável | Obrigatória | Padrão | Descrição |
+|---|---|---|---|
+| `POSTGRES_USER` | sim | — | Usuário do banco |
+| `POSTGRES_PASSWORD` | sim | — | Senha do banco |
+| `POSTGRES_DB` | sim | — | Nome do banco |
+| `POSTGRES_HOST` | não | `localhost` | Host do PostgreSQL |
+| `POSTGRES_PORT` | não | `5432` | Porta do PostgreSQL |
+| `DB_POOL_SIZE` | não | `5` | Conexões mantidas abertas no pool |
+| `DB_MAX_OVERFLOW` | não | `10` | Conexões extras permitidas em picos |
+| `SQL_ECHO` | não | `0` | `1` imprime as queries SQL no console |
+
+O `.env` está no `.gitignore` e **nunca deve ser commitado**. A URL de conexão é montada pelo código a partir dessas variáveis, então senhas com caracteres especiais (`@`, `:`, `/`) funcionam sem escape.
+
+### 5. Crie as tabelas
+
+Rode a partir da **raiz do projeto**:
+
+```bash
+python -m database.database
+```
+
+Isso cria as 4 tabelas (`CREATE TABLE IF NOT EXISTS`, então é seguro rodar mais de uma vez). Ele **não altera** tabelas que já existem: se o schema mudar, ainda é preciso recriar o banco ou aplicar a mudança à mão (veja [Migrations](#-limitações-e-observações)).
+
+### Alternativa: rodando com Docker
+
+Sobe o PostgreSQL e o programa juntos, sem instalar nada além do Docker.
+
+```bash
+cp .env.example .env        # preencha POSTGRES_USER, POSTGRES_PASSWORD e POSTGRES_DB
+docker compose up --build
+```
+
+O que acontece:
+
+1. O serviço `db` (PostgreSQL 16) sobe e só é considerado pronto depois de passar no healthcheck.
+2. O serviço `app` é construído a partir do `Dockerfile`, espera o banco ficar saudável, cria as tabelas (`python -m database.database`) e **termina**. Isso é esperado: o projeto ainda não tem um ponto de entrada que fique rodando.
+3. Os dados ficam no volume `pgdata` e sobrevivem a `docker compose down`.
+
+Comandos úteis:
+
+```bash
+docker compose up -d db                              # só o banco (para rodar o Python na sua máquina)
+docker compose run --rm app python -m database.database   # recria as tabelas que faltam
+docker compose exec db psql -U <usuario> -d <banco>  # abre o psql
+docker compose down                                  # para tudo, mantém os dados
+docker compose down -v                               # para tudo e APAGA os dados
+```
+
+Observações:
+
+- Dentro do Compose o programa fala com o banco pelo host `db`. O `POSTGRES_HOST` do `.env` só vale quando você roda o Python direto na sua máquina.
+- `POSTGRES_PORT` define a porta exposta no seu computador (útil para DBeaver, `psql`, etc.). Se a 5432 já estiver ocupada, troque no `.env`.
+- O PostgreSQL só lê usuário, senha e nome do banco na **primeira** vez que o volume é criado. Mudar esses valores no `.env` depois não altera um banco já existente; para recomeçar, use `docker compose down -v`.
+
+## 🗄️ Banco de dados
+
+### Tabelas
+
+| Tabela | Tipo | Descrição |
+|---|---|---|
+| `games` | Dimensão | Um registro por jogo: criador, place inicial, data de criação, data da primeira descoberta e se ainda está ativo. |
+| `game_snapshots` | Série temporal | Uma linha por jogo a cada coleta: jogadores simultâneos, visitas, favoritos, votos, gênero, em quais listas apareceu, nome e descrição. Só recebe inserts. |
+| `game_passes` | Monetização | Game passes de cada jogo, com preço, se está à venda e quando foi verificado pela última vez. |
+| `ml_game_features` | Feature store | Uma linha por jogo com features pré-calculadas para ML: crescimento, engajamento, monetização, mecânicas extraídas e cluster. |
+
+Todas as tabelas filhas referenciam `games.universe_id` com `ON DELETE CASCADE`: apagar um jogo apaga seus snapshots, passes e features. `game_snapshots` tem índices em `(universe_id, collected_at)` e em `collected_at`, para as consultas de janela de tempo (24h, 7d).
+
+> O schema usa `ARRAY` do PostgreSQL (`active_sorts`, `extracted_mechanics`). Ele **não funciona** em outros bancos como SQLite.
+
+### Repositories
+
+Os repositories ficam em `database/repositories/`, um arquivo por tabela, e são reunidos pela fachada `Repositories`:
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from database.database import get_session
+from database.repositories import Repositories
+
+with get_session() as session:
+    repos = Repositories(session)
+
+    repos.games.upsert_many([{
+        "universe_id": 123,
+        "root_place_id": 456,
+        "creator_id": 1,
+        "creator_name": "Studio X",
+        "created_at_roblox": datetime(2025, 1, 1, tzinfo=timezone.utc),
+    }])
+    repos.snapshots.add({"universe_id": 123, "name": "Meu Jogo", "playing": 1500, "visits": 90000})
+
+    ontem = datetime.now(timezone.utc) - timedelta(hours=24)
+    antigo = repos.snapshots.at_or_before(123, ontem)   # CCU de 24h atrás
+```
+
+| Repository | Principais métodos |
+|---|---|
+| `games` | `upsert_many`, `get`, `list_ids`, `existing_ids`, `set_active` |
+| `snapshots` | `add_many`, `latest`, `latest_per_game`, `at_or_before`, `series`, `avg_playing`, `count`, `prune_older_than` |
+| `passes` | `upsert_many`, `list_by_game`, `mark_unavailable`, `stats_by_game` |
+| `features` | `upsert_many`, `get`, `list_by_cluster`, `iter_all` |
+
+**Regras de projeto**
+
+- **Os repositories não fazem commit.** Quem controla a transação é `get_session()`, que faz commit ao final e rollback se der erro. Assim, uma coleta inteira entra ou sai junta.
+- **Upserts** usam `INSERT ... ON CONFLICT` do PostgreSQL, em lotes de 1000. `games.first_discovered_at` nunca é sobrescrito; `game_passes.last_checked_at` e `ml_game_features.computed_at` são renovados a cada upsert.
+- **Duplicatas no mesmo lote** são removidas antes do envio (a última vence), porque o PostgreSQL recusa o mesmo id duas vezes no mesmo comando.
+- **Todas as linhas de um lote precisam ter as mesmas chaves**; senão, um `ValueError` é lançado, em vez de gravar `NULL` por engano.
+- **Snapshots só recebem inserts.** Se `snapshot_date` não vier no dado, é preenchido com a data de `collected_at`.
+
+## 📦 Módulos de coleta
 
 ### `buscas/collector.py` — descoberta de jogos
 
 Função única: coletar jogos das listas de descoberta.
 
 ```python
-from buscas.collector import collect_games
+from collector import collect_games
 
 jogos = collect_games()
 ```
@@ -150,7 +254,7 @@ jogos = collect_games()
 Função única: consultar jogos já conhecidos pelo universe ID.
 
 ```python
-from buscas.lookup import fetch_games
+from lookup import fetch_games
 
 detalhes = fetch_games([10771421858, 10770728771])
 ```
@@ -181,74 +285,21 @@ Jogos removidos, privados ou inexistentes **não voltam** na resposta. Para sabe
 - `get_json(session, url, params)` faz um GET com retry e backoff exponencial para HTTP 429 e erros 5xx, respeitando o header `Retry-After` quando existe.
 - `REQUEST_DELAY` (1 s) é a pausa usada entre requisições.
 
-## 🚀 Como começar
+### Como usar os módulos de coleta
 
-### Requisitos
-
-- Python 3.10 ou superior
-- Git
-
-### 1. Clone o repositório
+Os módulos de `buscas/` importam `roblox_http` sem prefixo de pacote e **ainda não têm ponto de entrada** de linha de comando. Por isso, use-os em Python com a pasta `buscas/` no caminho de busca:
 
 ```bash
-git clone <url-do-repositorio>
-cd roblox-trend-radar
-```
-
-### 2. Crie um ambiente virtual
-
-```bash
-python -m venv .venv
-```
-
-Ative no Linux ou macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-No Windows:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 3. Instale as dependências
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 4. Execute os módulos
-
-Rode sempre a partir da **raiz do projeto**, com `python -m`, porque os módulos usam imports relativos dentro do pacote `buscas`.
-
-Coletar jogos (imprime o total e os 10 primeiros):
-
-```bash
-python3 -m buscas.collector
-```
-
-Consultar jogos por universe ID:
-
-```bash
-python3 -m buscas.lookup 10771421858 10770728771
-```
-
-Usar os dois juntos em outro arquivo, na raiz:
-
-```python
-from buscas.collector import collect_games
-from buscas.lookup import fetch_games
-
-descobertos = collect_games()
-ids = [g.universe_id for g in descobertos]
-detalhes = fetch_games(ids)
+PYTHONPATH=buscas python -c "from collector import collect_games; print(len(collect_games()))"
 ```
 
 A coleta faz cerca de 5 requisições (uma por lista) e leva alguns segundos por causa da pausa de 1 s entre elas.
 
 ## ⚠️ Limitações e observações
+
+### Migrations
+
+O projeto ainda não usa migrations. `python -m database.database` só cria tabelas que não existem. Enquanto não houver dados que valha preservar, dá para recriar o banco quando o schema mudar. Quando houver histórico acumulado, o próximo passo é adotar o Alembic.
 
 ### Endpoints não documentados
 
